@@ -46,8 +46,8 @@ jobs:
       run: mvn package -Dmaven.test.skip=true
     - name: Upload a Build Artifact
       uses: actions/upload-artifact@v4.3.1
-        with:
-          name: budgetin
-          path: target/BudgetIn.jar
-          overwrite: true
+      with:
+        name: budgetin
+        path: target/BudgetIn.jar
+        overwrite: true
             
