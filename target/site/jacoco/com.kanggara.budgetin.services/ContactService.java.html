@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ContactService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">BudgetIn</a> &gt; <a href="index.source.html" class="el_package">com.kanggara.budgetin.services</a> &gt; <span class="el_source">ContactService.java</span></div><h1>ContactService.java</h1><pre class="source lang-java linenums">package com.kanggara.budgetin.services;
+
+import java.util.List;
+import java.util.UUID;
+import java.util.Objects;
+import java.util.ArrayList;
+
+import lombok.extern.slf4j.Slf4j;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.data.domain.Page;
+import org.springframework.stereotype.Service;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.web.server.ResponseStatusException;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.kanggara.budgetin.entities.UserEntity;
+import com.kanggara.budgetin.entities.ContactEntity;
+import com.kanggara.budgetin.models.ContactResponse;
+import com.kanggara.budgetin.models.CreateContactRequest;
+import com.kanggara.budgetin.models.SearchContactRequest;
+import com.kanggara.budgetin.models.UpdateContactRequest;
+import com.kanggara.budgetin.repository.ContactRepository;
+
+import jakarta.persistence.criteria.Predicate;
+
+<span class="fc" id="L30">@Slf4j</span>
+@Service
+public class ContactService {
+
+  private final ValidationService validationService;
+
+  private final ContactRepository contactRepository;
+
+<span class="fc" id="L38">  ContactService(ValidationService validationService, ContactRepository contactRepository) {</span>
+<span class="fc" id="L39">    this.validationService = validationService;</span>
+<span class="fc" id="L40">    this.contactRepository = contactRepository;</span>
+<span class="fc" id="L41">  }</span>
+
+  @Transactional
+  public ContactResponse create(UserEntity userEntity, CreateContactRequest contactRequest) {
+<span class="fc" id="L45">    validationService.validate(contactRequest);</span>
+
+<span class="fc" id="L47">    ContactEntity contact = new ContactEntity();</span>
+<span class="fc" id="L48">    contact.setId(UUID.randomUUID().toString());</span>
+<span class="fc" id="L49">    log.info(&quot;First Name: {}&quot;, contactRequest.getFirstName());</span>
+<span class="fc" id="L50">    contact.setFirstName(contactRequest.getFirstName());</span>
+<span class="fc" id="L51">    contact.setLastName(contactRequest.getLastName());</span>
+<span class="fc" id="L52">    contact.setEmail(contactRequest.getEmail());</span>
+<span class="fc" id="L53">    contact.setPhone(contactRequest.getPhone());</span>
+<span class="fc" id="L54">    contactRepository.save(contact);</span>
+
+<span class="fc" id="L56">    return toContactResponse(contact);</span>
+  }
+
+  private ContactResponse toContactResponse(ContactEntity contact) {
+<span class="fc" id="L60">    return ContactResponse.builder()</span>
+<span class="fc" id="L61">        .id(contact.getId())</span>
+<span class="fc" id="L62">        .firstName(contact.getFirstName())</span>
+<span class="fc" id="L63">        .lastName(contact.getLastName())</span>
+<span class="fc" id="L64">        .email(contact.getEmail())</span>
+<span class="fc" id="L65">        .phone(contact.getPhone())</span>
+<span class="fc" id="L66">        .build();</span>
+  }
+
+  @Transactional(readOnly = true)
+  public ContactResponse get(UserEntity userEntity, String id) {
+
+<span class="fc" id="L72">    ContactEntity contact = contactRepository.findFirstByUserAndId(userEntity, id)</span>
+<span class="fc" id="L73">        .orElseThrow(this::contactNotFound);</span>
+
+<span class="fc" id="L75">    return toContactResponse(contact);</span>
+
+  }
+
+  @Transactional
+  public ContactResponse update(UserEntity userEntity, UpdateContactRequest request) {
+<span class="fc" id="L81">    validationService.validate(request);</span>
+
+<span class="fc" id="L83">    ContactEntity contact = contactRepository.findFirstByUserAndId(userEntity, request.getId())</span>
+<span class="fc" id="L84">        .orElseThrow(this::contactNotFound);</span>
+
+<span class="fc" id="L86">    contact.setFirstName(request.getFirstName());</span>
+<span class="fc" id="L87">    contact.setLastName(request.getLastName());</span>
+<span class="fc" id="L88">    contact.setPhone(request.getPhone());</span>
+<span class="fc" id="L89">    contact.setEmail(request.getEmail());</span>
+<span class="fc" id="L90">    contactRepository.save(contact);</span>
+
+<span class="fc" id="L92">    return toContactResponse(contact);</span>
+  }
+
+  @Transactional
+  public void delete(UserEntity userEntity, String contactId) {
+<span class="fc" id="L97">    ContactEntity contact = contactRepository.findFirstByUserAndId(userEntity, contactId)</span>
+<span class="fc" id="L98">        .orElseThrow(this::contactNotFound);</span>
+
+<span class="fc" id="L100">    contactRepository.delete(contact);</span>
+<span class="fc" id="L101">  }</span>
+
+  private ResponseStatusException contactNotFound() {
+<span class="fc" id="L104">    return new ResponseStatusException(HttpStatus.NOT_FOUND, &quot;Contact Not Found&quot;);</span>
+  }
+
+  @Transactional(readOnly = true)
+  public Page&lt;ContactResponse&gt; search(UserEntity userEntity, SearchContactRequest request) {
+
+<span class="fc" id="L110">    Specification&lt;ContactEntity&gt; specification = (root, query, builder) -&gt; {</span>
+<span class="fc" id="L111">      List&lt;Predicate&gt; predicates = new ArrayList&lt;&gt;();</span>
+
+<span class="fc" id="L113">      predicates.add(builder.equal(root.get(&quot;user&quot;), userEntity));</span>
+
+<span class="fc bfc" id="L115" title="All 2 branches covered.">      if (Objects.nonNull(request.getName())) {</span>
+<span class="fc" id="L116">        predicates.add(builder.or(</span>
+<span class="fc" id="L117">            builder.like(root.get(&quot;firstName&quot;), &quot;%&quot; + request.getName() + &quot;%&quot;),</span>
+<span class="fc" id="L118">            builder.like(root.get(&quot;lastName&quot;), &quot;%&quot; + request.getName() + &quot;%&quot;)));</span>
+      }
+
+<span class="fc bfc" id="L121" title="All 2 branches covered.">      if (Objects.nonNull(request.getEmail())) {</span>
+<span class="fc" id="L122">        predicates.add(builder.like(root.get(&quot;email&quot;), &quot;%&quot; + request.getEmail() + &quot;%&quot;));</span>
+      }
+
+<span class="fc bfc" id="L125" title="All 2 branches covered.">      if (Objects.nonNull(request.getPhone())) {</span>
+<span class="fc" id="L126">        predicates.add(builder.like(root.get(&quot;phone&quot;), &quot;%&quot; + request.getPhone() + &quot;%&quot;));</span>
+      }
+
+<span class="fc" id="L129">      return query.where(predicates.toArray(new Predicate[] {})).getRestriction();</span>
+    };
+
+<span class="fc" id="L132">    Pageable pageable = PageRequest.of(request.getPage(), request.getSize());</span>
+
+<span class="fc" id="L134">    Page&lt;ContactEntity&gt; contacts = contactRepository.findAll(specification, pageable);</span>
+
+<span class="fc" id="L136">    List&lt;ContactResponse&gt; contactResponses = contacts.getContent().stream()</span>
+<span class="fc" id="L137">        .map(this::toContactResponse).toList();</span>
+
+<span class="fc" id="L139">    return new PageImpl&lt;&gt;(contactResponses, pageable, contacts.getTotalElements());</span>
+  }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

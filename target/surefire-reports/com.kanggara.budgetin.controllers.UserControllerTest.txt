@@ -1,0 +1,4 @@
+-------------------------------------------------------------------------------
+Test set: com.kanggara.budgetin.controllers.UserControllerTest
+-------------------------------------------------------------------------------
+Tests run: 18, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 13.01 s -- in com.kanggara.budgetin.controllers.UserControllerTest

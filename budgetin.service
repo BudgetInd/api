@@ -1,0 +1,21 @@
+[Unit]
+Description=Budgetin port 8090
+After=network-online.target syslog.target
+Wants=network-online.target systemd-networkd-wait-online.service
+
+[Service]
+User=idscript
+Group=idscript
+WorkingDirectory=/home/idscript/app
+Environment=JAVA_HOME=/home/idscript/dev/jdk
+ExecStart=/home/idscript/dev/jdk/bin/java -jar /home/idscript/app/BudgetIn.jar
+ExecStop=/bin/kill -15 $MAINPID
+StandardOutput=syslog
+StandardError=syslog
+SuccessExitStatus=143
+TimeoutStopSec=10
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

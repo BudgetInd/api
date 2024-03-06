@@ -1,0 +1,4 @@
+-------------------------------------------------------------------------------
+Test set: com.kanggara.budgetin.controllers.ContactControllerTest
+-------------------------------------------------------------------------------
+Tests run: 11, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 4.994 s -- in com.kanggara.budgetin.controllers.ContactControllerTest
