@@ -14,12 +14,16 @@ jobs:
         java: ['17', '21']
     steps:
     - uses: actions/checkout@v4
-    - name: Setup Java JDK
+    - name: Setup Java JDK ${{ matrix.java }}
       uses: actions/setup-java@v4.1.0      
       with:
         java-version: ${{ matrix.java }}
         distribution: 'temurin'
         cache: maven
+    - name: Start MySQL
+      run: |
+        sudo /etc/init.d/mysql start
+        mysql -e "CREATE DATABASE IF NOT EXISTS budgetin;" -uroot -proot
     - name: Unit Test with Maven
       run: mvn test
 
